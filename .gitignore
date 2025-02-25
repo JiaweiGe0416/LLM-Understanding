@@ -1,0 +1,11 @@
+concept_graphs/input
+concept_graphs/output
+
+concept-learning/data
+concept-learning/data/*
+concept-learning/yamls/*
+concept-learning/concept-learning/scripts/*
+figures/*
+concept-learning/__pycache__/*
+concept-learning/**/__pycache__/*
+concept-learning/notebooks/single-body_2d_3classes

@@ -1,0 +1,1 @@
+/data2/jiawei/llm-understanding/concept-learning/yaml_makers/yamls/images_1/2x2x2_final/sc2ss2sb2_re/shape_color_size/seed=0.yaml
