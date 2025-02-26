@@ -76,7 +76,7 @@ class my_dataset(Dataset):
                    '2': [0.1, 0.9, 0.1]
                }
                # Assign size and color based on label values
-               size = 2.6 if int(name_labels[2]) == 0 else self.test_size
+               size = 0.6 if int(name_labels[2]) == 0 else self.test_size
             
                color = colors_map[name_labels[1]]
        

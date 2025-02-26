@@ -25,10 +25,10 @@ class my_dataset(Dataset):
         if training:
             self.train_image_paths = []
             for config in configs:
-                new_paths = glob.glob(dataset+"/*/CLEVR_"+config+"_*.png")
+                new_paths = glob.glob("input/"+dataset+"/*/CLEVR_"+config+"_*.png")
                 self.train_image_paths += new_paths
         else:
-            self.test_image_paths = glob.glob(dataset+"/test/CLEVR_"+configs+"_*.png")
+            self.test_image_paths = glob.glob("input/"+dataset+"/test/CLEVR_"+configs+"_*.png")
 
         if self.training: 
            self.len_data = len(self.train_image_paths) - 1

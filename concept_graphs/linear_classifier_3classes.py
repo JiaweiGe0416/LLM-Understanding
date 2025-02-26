@@ -10,7 +10,8 @@ import torchvision.datasets as datasets
 from sklearn import metrics
 from sklearn import decomposition
 from sklearn import manifold
-from tqdm.notebook import trange, tqdm
+# from tqdm.notebook import trange
+from tqdm import tqdm, trange
 import matplotlib.pyplot as plt
 import numpy as np
 
@@ -52,6 +53,7 @@ def train(model, iterator, optimizer, criterion, device):
 
     for (x, y) in tqdm(iterator, desc="Training", leave=False):
         x = x.to(device)
+        y = {k: torch.tensor(v).to(device) if not isinstance(v, torch.Tensor) else v.to(device) for k, v in y.items()}
         optimizer.zero_grad()
         y_pred = model(x)
         loss = criterion(y_pred[0], y[0]) + criterion(y_pred[1], y[1]) + criterion(y_pred[2], y[2])
@@ -86,6 +88,7 @@ def evaluate(model, iterator, criterion, device):
     with torch.no_grad():
         for (x, y) in tqdm(iterator, desc="Evaluating", leave=False):
             x = x.to(device)
+            y = {k: torch.tensor(v).to(device) if not isinstance(v, torch.Tensor) else v.to(device) for k, v in y.items()}
             #y = _y[key].to(device)
 
             y_pred = model(x)
@@ -159,6 +162,8 @@ if __name__ == "__main__":
     OUTPUT_DIMS = [len(properties[key]) for key in ["shapes","colors","sizes"]]
     OUTPUT_DIMS[1] = n_class_color
     model = MLP(INPUT_DIM, OUTPUT_DIMS)
+    model = model.to(device)
+
     optimizer = optim.Adam(model.parameters())
     criterion = nn.CrossEntropyLoss()
     #model = model.to(device)
