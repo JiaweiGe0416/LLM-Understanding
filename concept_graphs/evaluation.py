@@ -94,7 +94,8 @@ if __name__ == "__main__":
     # Paths
     model_path = "working/linear-classifier_single-body_2d_3classes_multi-class.pt"
     npz_folder = "output/single-body_2d_3classes/H32-train1/5000_0.2_256_500_100_0.0001_None_1500_2.0_1"
-    npz_files = ["image_001_ep99.npz", "image_010_ep99.npz", "image_011_ep99.npz", "image_111_ep99.npz"]
+    npz_files = ["image_000_ep99.npz", "image_001_ep99.npz", "image_010_ep99.npz", "image_100_ep99.npz",
+                 "image_011_ep99.npz", "image_101_ep99.npz", "image_110_ep99.npz", "image_111_ep99.npz"]
 
     # Configs
     pixel_size = 28
