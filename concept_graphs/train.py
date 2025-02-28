@@ -24,7 +24,7 @@ device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--lrate', default=1e-4, type=float)
-parser.add_argument('--test_size', default=0.2, type=float)
+parser.add_argument('--test_size', default=0.4, type=float)
 parser.add_argument('--alpha', default=1500, type=int)
 parser.add_argument('--beta', default=2.0, type=float)
 parser.add_argument('--num_samples', default=5000, type=int)
@@ -601,8 +601,8 @@ def training(args):
     test_dataloaders = {}
     log_dict = {'train_loss_per_batch': [],
                 'test_loss_per_batch': {key: [] for key in configs["test"]}}
-    # output_configs = list(set(configs["test"] + configs["train"])) 
-    output_configs = list(set(configs["test"])) 
+    output_configs = list(set(configs["test"] + configs["train"])) 
+    # output_configs = list(set(configs["test"])) 
     for config in output_configs: 
         test_dataset = load_dataset.my_dataset(tf, n_sample, dataset, configs=config, training=False, test_size=test_size) 
         test_dataloaders[config] = DataLoader(test_dataset, batch_size=batch_size, shuffle=False, num_workers=1)
@@ -639,6 +639,7 @@ def training(args):
                     _test_c = [tmptest_c.to(device) for tmptest_c in test_c.values()]
                     test_loss = ddpm(test_x, _test_c)
                     log_dict['test_loss_per_batch'][test_config].append(test_loss.item())
+                    
 
             # if (ep + 1) % 100 == 0 or ep >= (n_epoch - 5): 
             if (ep + 1) % 100 == 0 or ep >= (n_epoch-1): 

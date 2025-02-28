@@ -38,7 +38,7 @@ class my_dataset(Dataset):
                 self.train_image_paths.extend(new_paths)
             self.len_data = len(self.train_image_paths)
         else:
-            self.test_image_paths = glob.glob(f"input/{dataset}/test/{prefix}_{configs}_*{ext}")
+            self.test_image_paths = glob.glob(f"input/{dataset}/*/{prefix}_{configs}_*{ext}")
             self.len_data = len(self.test_image_paths)
 
 
