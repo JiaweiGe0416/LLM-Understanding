@@ -24,7 +24,7 @@ device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--lrate', default=1e-4, type=float)
-parser.add_argument('--test_size', default=0.2, type=float)
+parser.add_argument('--test_size', default=0.4, type=float)
 parser.add_argument('--alpha', default=1500, type=int)
 parser.add_argument('--beta', default=2.0, type=float)
 parser.add_argument('--num_samples', default=5000, type=int)

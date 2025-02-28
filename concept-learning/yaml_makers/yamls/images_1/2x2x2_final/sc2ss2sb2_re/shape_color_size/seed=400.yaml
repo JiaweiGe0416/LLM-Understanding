@@ -70,7 +70,7 @@ data_params:
     min: 0.1
     mins:
     - 0.55
-    - 0.35
+    - 0.4
     s_n: 0.0
   x:
     max: 0.0
