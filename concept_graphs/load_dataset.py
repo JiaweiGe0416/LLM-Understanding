@@ -100,7 +100,7 @@ class my_dataset(Dataset):
 if __name__ == '__main__':
     #transform = transforms.Compose([transforms.Resize((54,54)), transforms.ToTensor()])
     transform = transforms.Compose([transforms.ToTensor()])
-    dataset = my_dataset(transform, dataset="single-body_2d_3classes", n_class_size=1, n_class_color=1, configs=["000","010","100","001"])
+    dataset = my_dataset(transform, dataset="single-body_2d_3classes", n_class_size=1, n_class_color=1, configs=["000","100","101","110"])
     dataloader = DataLoader(dataset, batch_size=4)
 
     for img, label in dataloader:

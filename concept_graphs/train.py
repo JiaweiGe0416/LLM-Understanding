@@ -32,7 +32,7 @@ parser.add_argument('--batch_size', default=64, type=int)
 parser.add_argument('--n_T', default=500, type=int)
 parser.add_argument('--n_feat', default=256, type=int)
 parser.add_argument('--n_sample', default=64, type=int)
-parser.add_argument('--n_epoch', default=100, type=int)
+parser.add_argument('--n_epoch', default=5, type=int) # changed from 100
 parser.add_argument('--experiment', default="H32-train1", type=str)
 parser.add_argument('--remove_node', default="None", type=str)
 parser.add_argument('--type_attention', default="", type=str)
