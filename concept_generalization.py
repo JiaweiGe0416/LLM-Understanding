@@ -337,7 +337,7 @@ def scatter_testPredictions(evals, test_targets, hidden_dim, test_ids, n_test=10
     plt.show()
     
     
-def plot_trainingLoss(losses, loss_n, plot_list, hidden_dim, activation_type='ReLU', k=1, hi=100):
+def plot_trainingLoss(losses, loss_n, plot_list, hidden_dim, activation_type='ReLU', k=1, epochs=100):
     """
     Plot a random training loss history from one of k models trained on n train samples for each n in plot_list.
 
@@ -348,6 +348,7 @@ def plot_trainingLoss(losses, loss_n, plot_list, hidden_dim, activation_type='Re
     - hidden_dim: List containing number of hidden neurons per layer
     - activation_type: {'linear', 'ReLU}
     - k (int): number of predictions/models trained for each choice of n
+    - epochs (int): number of epochs
     """
     n_plots = len(plot_list)
     for loss_idx in plot_list:
