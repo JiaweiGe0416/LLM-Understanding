@@ -290,8 +290,8 @@ def plot_clusterTestLoss(loss_list, test_centers, hidden_dim, activation_type='R
     plt.ylabel('Test Loss')
     plt.title('Test loss over Num samples (hidden_dim = %s, ' % hidden_dim + activation_type + ')')
     plt.legend([''.join(map(str, test_centers[cluster_idx])) for cluster_idx in range(n_testCenters)])
-    plt.xticks(np.arange(lo - 10, hi, labels)/step)
-    plt.xticks(np.arange(lo - 10, hi, labels)/step, 10 + np.arange(lo - 10, hi, labels))
+    plt.xlim(0,(hi-lo)/step)
+    plt.xticks(np.arange(0, hi-lo,step)/step, lo + np.arange(0, hi-lo, labels))
     plt.grid(True)
     plt.show()
     
