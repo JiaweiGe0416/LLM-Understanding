@@ -124,8 +124,8 @@ n_samples_test_gen:
 - 0
 - 0
 - 5000
-- 0
 - 5000
+- 0
 - 5000
 - 5000
 n_samples_train:
@@ -142,8 +142,8 @@ n_samples_train_gen:
 - 2000
 - 2000
 - 0
-- 20000
 - 0
+- 20000
 - 0
 - 0
 num_steps: 40000
