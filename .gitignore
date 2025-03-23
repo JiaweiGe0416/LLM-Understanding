@@ -1,11 +1,11 @@
-concept_graphs/input
-concept_graphs/output
+Diffusion_task/concept_graphs/input
+Diffusion_task/concept_graphs/output
 
-concept-learning/data
-concept-learning/data/*
-concept-learning/yamls/*
-concept-learning/concept-learning/scripts/*
-figures/*
-concept-learning/__pycache__/*
-concept-learning/**/__pycache__/*
-concept-learning/notebooks/single-body_2d_3classes
+Diffusion_task/concept-learning/data
+Diffusion_task/concept-learning/data/*
+Diffusion_task/concept-learning/yamls/*
+Diffusion_task/concept-learning/concept-learning/scripts/*
+Diffusion_task/figures/*
+Diffusion_task/concept-learning/__pycache__/*
+Diffusion_task/concept-learning/**/__pycache__/*
+Diffusion_task/concept-learning/notebooks/single-body_2d_3classes
