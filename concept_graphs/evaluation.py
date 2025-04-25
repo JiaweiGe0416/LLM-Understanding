@@ -5,6 +5,10 @@ import numpy as np
 import os
 import re
 from tqdm import tqdm
+from PIL import Image
+import argparse
+import json
+
 
 # ------------------------- Define MLP Class -------------------------
 class MLP(nn.Module):
@@ -54,6 +58,16 @@ def evaluate_npz(model, npz_path, device):
         images = data[key]  # Shape: (64, 3, 28, 28)
         total_images += images.shape[0]
 
+        #shape_flag = int(ground_truth[0])
+        #color_flag = int(ground_truth[1])
+        #size_flag = int(ground_truth[2])
+        #save_dir = "/data2/amanda/LLM-Understanding/concept_graphs/output/single-body_2d_3classes/seed=300/H32-train1/5000_0.4_256_500_200_0.0001_None_1500_2.0_1"
+        #for idx, img in enumerate(images):
+        #    img_filename = f"CLEVR_{shape_flag}{color_flag}{size_flag}_{idx:05d}.png"
+        #    img = (img * 255).astype(np.uint8)  # Convert to [0,255] range
+        #    img_pil = Image.fromarray(np.transpose(img, (1, 2, 0)))  # Convert to HxWxC
+        #    img_pil.save(os.path.join(save_dir, img_filename))
+
         # Convert images to tensor
         images_tensor = torch.tensor(images, dtype=torch.float32).to(device)
 
@@ -91,11 +105,23 @@ def evaluate_npz(model, npz_path, device):
 
 # ------------------------- Main Evaluation -------------------------
 if __name__ == "__main__":
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--seed', default=0, type=int)
+    parser.add_argument('--config', type=str)
+    parser.add_argument('--ep', default=199, type=int)
+    args = parser.parse_args()
+    seed = args.seed
+    config = args.config
+    ep = args.ep
+
+    with open(f"config_categories/config_category_{config}.json", 'r') as f:
+         configs = json.load(f)['H32-train1']
+    output_configs = list(set(configs["test"] + configs["train"])) 
+
     # Paths
     model_path = "working/linear-classifier_single-body_2d_3classes_multi-class.pt"
-    npz_folder = "output/single-body_2d_3classes/H32-train1/5000_0.2_256_500_100_0.0001_None_1500_2.0_1"
-    npz_files = ["image_000_ep99.npz", "image_001_ep99.npz", "image_010_ep99.npz", "image_100_ep99.npz",
-                 "image_011_ep99.npz", "image_101_ep99.npz", "image_110_ep99.npz", "image_111_ep99.npz"]
+    npz_folder = f"output/single-body_2d_3classes/seed={seed}/H32-train1/{config}"
+    npz_files = [f"image_{out_config}_ep{ep}.npz" for out_config in output_configs]
 
     # Configs
     pixel_size = 28
@@ -121,6 +147,8 @@ if __name__ == "__main__":
         }
 
     # Only print final error rates per NPZ file
+    f = open(npz_folder + "/evaluation.txt", "w")
+    
     print("\n Final Error Rates per NPZ File:")
     for npz_file, errors in file_errors.items():
         print(f"\n {npz_file}:")
@@ -129,3 +157,12 @@ if __name__ == "__main__":
         print(f" - Shape Error Rate: {errors['per_class'][0]*100:.2f}%")
         print(f" - Color Error Rate: {errors['per_class'][1]*100:.2f}%")
         print(f" - Size Error Rate: {errors['per_class'][2]*100:.2f}%")
+
+        f.write(f"\n {npz_file}: \n")
+        f.write(f" - Total Images: {errors['total_images']} \n")
+        f.write(f" - Overall Error Rate: {errors['overall']*100:.2f}% \n")
+        f.write(f" - Shape Error Rate: {errors['per_class'][0]*100:.2f}% \n")
+        f.write(f" - Color Error Rate: {errors['per_class'][1]*100:.2f}% \n")
+        f.write(f" - Size Error Rate: {errors['per_class'][2]*100:.2f}% \n")
+
+    f.close()

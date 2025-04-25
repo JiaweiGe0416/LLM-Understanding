@@ -1,4 +1,4 @@
-import pandas as pd
+#import pandas as pd
 import torch
 from torch.utils.data import DataLoader, Dataset
 from PIL import Image
@@ -26,6 +26,7 @@ class my_dataset(Dataset):
             self.train_image_paths = []
             for config in configs:
                 path_pattern = f"input/{dataset}/train/{prefix}_{config}_*{ext}"
+                print("path_pattern for config", config, ":", path_pattern)
                 # if config == "000" and alpha != 1500 and remove_node != "100":  
                 #     path_pattern = f"input/{dataset}/train/{prefix}_000_*{ext}" 
                 # else: 
@@ -38,7 +39,7 @@ class my_dataset(Dataset):
                 self.train_image_paths.extend(new_paths)
             self.len_data = len(self.train_image_paths)
         else:
-            self.test_image_paths = glob.glob(f"input/{dataset}/*/{prefix}_{configs}_*{ext}")
+            self.test_image_paths = glob.glob(f"input/{dataset}/test/{prefix}_{configs}_*{ext}")
             self.len_data = len(self.test_image_paths)
 
 
@@ -60,7 +61,7 @@ class my_dataset(Dataset):
    
        name_labels = img_path.split("_")[-2]
        
-       if self.dataset == "single-body_2d_3classes":
+       if "single-body_2d_3classes" in self.dataset:
            with open(img_path.replace(".png", ".json"), 'r') as f:
                my_dict = json.loads(f.read())
                _size = my_dict[0]
@@ -86,6 +87,42 @@ class my_dataset(Dataset):
        
            # Create the label dictionary
            label = {0: int(name_labels[0]), 1: color, 2: size}
+        
+       elif "bg_color_size" in self.dataset:
+           with open(img_path.replace(".png", ".json"), 'r') as f:
+               my_dict = json.loads(f.read())
+               _size = my_dict[0]
+               _color = my_dict[1][:3]
+               _bg = my_dict[2][:3]
+       
+           if self.training:
+               size, color, bg = _size, _color, _bg
+           else:
+               # Define colors mapping
+               colors_map = {
+                   '0': [0.9, 0.1, 0.1],
+                   '1': [0.1, 0.1, 0.9],
+                   '2': [0.1, 0.9, 0.1]
+               }
+
+               # Define colors mapping
+               bg_map = {
+                   '0': [0.9, 0.9, 0.9],
+                   '1': [0.1, 0.1, 0.1]
+               }
+
+               # Assign size and color based on label values
+               size = 0.6 if int(name_labels[2]) == 0 else self.test_size
+               color = colors_map[name_labels[1]]
+               bg = bg_map[name_labels[0]]
+       
+           # Convert size and color to numpy arrays
+           size = np.array(size, dtype=np.float32)
+           color = np.array(color, dtype=np.float32)
+           bg = np.array(bg, dtype=np.float32)
+       
+           # Create the label dictionary
+           label = {0: bg, 1: color, 2: size}
        
        elif "celeba" in self.dataset:
            label = {i: int(name_labels[i]) for i in range(3)}
@@ -100,7 +137,7 @@ class my_dataset(Dataset):
 if __name__ == '__main__':
     #transform = transforms.Compose([transforms.Resize((54,54)), transforms.ToTensor()])
     transform = transforms.Compose([transforms.ToTensor()])
-    dataset = my_dataset(transform, dataset="single-body_2d_3classes", n_class_size=1, n_class_color=1, configs=["000","010","100","001"])
+    dataset = my_dataset(transform, dataset="single-body_2d_3classes/seed=400", configs=["000","100","010","001"])
     dataloader = DataLoader(dataset, batch_size=4)
 
     for img, label in dataloader:

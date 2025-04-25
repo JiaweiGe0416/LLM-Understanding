@@ -4,7 +4,7 @@ import torch.optim as optim
 import numpy as np
 from tqdm import tqdm
 from train import ConditionalUNet  # Import trained DDPM model
-from load_dataset import get_dataloader  # Load dataset
+from concept_graphs.mycode.load_dataset_mycode import get_dataloader  # Load dataset
 
 
 

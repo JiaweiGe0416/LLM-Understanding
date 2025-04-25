@@ -32,6 +32,7 @@ class MyDataset(Dataset):
             path_pattern = os.path.join(dataset_path, subdir, f"{prefix}_{config}_*{ext}")
             new_paths = glob.glob(path_pattern)
             self.image_paths.extend(new_paths)
+            print(path_pattern)
 
         self.len_data = len(self.image_paths)
         print(f"Loaded {self.len_data} {'training' if training else 'testing'} images.")

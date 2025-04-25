@@ -1,11 +1,8 @@
 import numpy as np
-
 import torch
 import torch.nn as nn
 import torch.optim as optim
 from torch.utils.data import DataLoader, TensorDataset
-
-
 import importlib
 from mpl_toolkits.mplot3d import Axes3D
 import matplotlib.pyplot as plt
@@ -22,22 +19,18 @@ def sampling(center_list, var_list, n):
     Returns:
     numpy.ndarray: Array of shape (len(center_list) * n, d) containing sampled points.
     """
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     samples = []
     
     for center, cov in zip(center_list, var_list):
-        center = np.array(center)
-        cov = np.array(cov)
+        center = torch.tensor(center, dtype=torch.float32, device=device)
+        cov = torch.tensor(cov, dtype=torch.float32, device=device)
         
         # Sample n points from a multivariate Gaussian distribution
-        sampled_points = np.random.multivariate_normal(mean=center, cov=cov, size=n)
+        sampled_points = torch.distributions.MultivariateNormal(center, covariance_matrix=cov).sample((n,))
         samples.append(sampled_points)
     
-    return np.vstack(samples)
-
-
-
-
-
+    return torch.vstack(samples)
 
 
 class MLP(nn.Module):
@@ -68,7 +61,7 @@ class MLP(nn.Module):
                         linear.weight.copy_(pretrained_weights['linear.weight'])
                         linear.bias.copy_(pretrained_weights['linear.bias'])
                 else: # initialize weights around 0
-                    nn.init.normal_(linear.weight, mean = 0.0, std = 0.001)
+                    nn.init.normal_(linear.weight, mean = 0.0, std = 1)
                     nn.init.constant_(linear.bias, 0.0)
 
             layers.append(linear) 
@@ -87,7 +80,7 @@ class MLP(nn.Module):
                     linear.weight.copy_(pretrained_weights['linear.weight'])
                     linear.bias.copy_(pretrained_weights['linear.bias'])
             else: # initialize weights around 0
-                nn.init.normal_(linear.weight, mean = 0.0, std = 0.001)
+                nn.init.normal_(linear.weight, mean = 0.0, std = 0.1)
                 nn.init.constant_(linear.bias, 0.0)
         layers.append(linear)
 
@@ -135,7 +128,7 @@ def train_mlp(samples, hidden_dims, activation_type, targets, learning_rate=0.00
     model = MLP(input_dim, hidden_dims, activation_type, use_bias, use_init, init_weights).to(device)
 
     # Define optimizer
-    optimizer = optim.Adam(model.parameters(), lr=learning_rate)
+    optimizer = optim.SGD(model.parameters(), lr=learning_rate)
 
     # Training loop
     loss_history = []
@@ -213,7 +206,7 @@ def test_model(model, test_points):
 
 
 
-def collect_clusterPredictions(hidden_dim, activation_type, center_list, var_list, test_centers, test_vars, target_fn=None, n_test=5, k=1, lo=10, hi=100, step=1, learning_rate=0.001, norm_ord=None, use_tol=True, debug=False, use_bias=False, use_init=False, init_weights=False):
+def collect_clusterPredictions(hidden_dim, activation_type, center_list, var_list, test_centers, test_vars, target_fn=None, n_test=5, k=1, lo=10, hi=100, step=1, learning_rate=0.001, use_tol=True, debug=False, use_bias=False, use_init=False, init_weights=False):
     """
     Collect predictions of model on test set over values of n (number of training samples) between lo and hi. 
     Also collect (averaged over k) training loss history models trained on each of range(lo,hi,step) samples.
@@ -231,7 +224,6 @@ def collect_clusterPredictions(hidden_dim, activation_type, center_list, var_lis
     - lo (int): min n
     - hi (int): max n
     - learning_rate (int): intervals of n
-    - norm_ord (int): order of matrix norms
 
     Returns:
     - evals (n_sizes x k x n_testPoints x dim): Array of all model predictions (over lo <= n < hi) for each test point
@@ -275,9 +267,9 @@ def collect_clusterPredictions(hidden_dim, activation_type, center_list, var_lis
             curr_norms.append([])
             for name in layer_names:
                 if "weight" in name:
-                    curr_norms[j].append(np.linalg.norm(w[name], ord=norm_ord, axis=(0,1)))
+                    curr_norms[j].append(torch.linalg.matrix_norm(w[name], axis=(0,1)))
                 elif "bias" in name:
-                    curr_norms[j].append(np.linalg.norm(w[name], ord=norm_ord))
+                    curr_norms[j].append(torch.linalg.vector_norm(w[name]))
         
         losses.append(curr_losses)  # curr_losses is k x len(loss_history)
         evals.append(curr_tests)    # curr_tests is k x n_testPoints x 3

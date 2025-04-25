@@ -17,13 +17,14 @@ import argparse
 from einops import rearrange, repeat, reduce, pack, unpack
 import math
 import random
+from PIL import Image
 
 
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
 
 parser = argparse.ArgumentParser()
-parser.add_argument('--lrate', default=1e-4, type=float)
+parser.add_argument('--lrate', default=1e-7, type=float)
 parser.add_argument('--test_size', default=0.4, type=float)
 parser.add_argument('--alpha', default=1500, type=int)
 parser.add_argument('--beta', default=2.0, type=float)
@@ -40,7 +41,7 @@ parser.add_argument('--pixel_size', default=28, type=int)
 parser.add_argument('--dataset', default="single-body_2d_3classes", type=str)
 parser.add_argument('--scheduler', default="", type=str)
 parser.add_argument('--seed', type=int, default=1)
-
+parser.add_argument('--config', type=str)
 
 
 class ResidualConvBlock(nn.Module):
@@ -552,6 +553,7 @@ def training(args):
     remove_node = args.remove_node 
     seed = args.seed
     scheduler = args.scheduler
+    config_cat = args.config
     # in_channels = 3 if "celeba" in dataset else 4
     in_channels = 3
 
@@ -566,14 +568,15 @@ def training(args):
     random.seed(seed)
 
 
-    with open("config_category.json", 'r') as f:
+    with open(f"config_categories/config_category_{config_cat}.json", 'r') as f:
          configs = json.load(f)[experiment]
 
 
     experiment_classes = {
         "H42-train1": [2, 3, 1, 1],
         "H22-train1": [2, 2],
-        "default": [2, 3, 1]
+        "default": [3, 3, 1],
+
     }
     n_classes = experiment_classes.get(experiment, experiment_classes["default"])
 
@@ -585,8 +588,7 @@ def training(args):
 
     save_dir = './output/'+dataset+'/'+experiment+'/'
     if not os.path.isdir(save_dir): os.makedirs(save_dir)
-    save_dir = save_dir + str(num_samples) + "_" + str(test_size) + "_" + str(n_feat) + "_" + str(n_T) + "_" + str(n_epoch) \
-                        + "_" + str(lrate) + "_" + remove_node + "_" + str(alpha) + "_" + str(beta) + "_" + str(seed) + "/" #+ str(type_attention) + "/"
+    save_dir = save_dir + config_cat + "/" #+ str(type_attention) + "/"
     if not os.path.isdir(save_dir): os.makedirs(save_dir)
 
     ddpm = DDPM(nn_model=ContextUnet(in_channels=in_channels, n_feat=n_feat, n_classes=n_classes, dataset=dataset, type_attention=type_attention), 
@@ -594,18 +596,25 @@ def training(args):
     ddpm.to(device)
 
 
+    print("dataset", dataset)
     train_dataset = load_dataset.my_dataset(tf, num_samples, dataset, configs=configs["train"], training=True, alpha=alpha, remove_node=remove_node)
     train_dataloader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True, num_workers=1)
-
+    print("training configs:", configs["train"])
+    print(train_dataset.len_data)
 
     test_dataloaders = {}
-    log_dict = {'train_loss_per_batch': [],
-                'test_loss_per_batch': {key: [] for key in configs["test"]}}
+    #log_dict = {'train_loss_per_batch': [],
+    #            'test_loss_per_batch': {key: [] for key in configs["test"]}}
+    log_dict = {'train_loss_per_epoch': [],
+                'test_loss_per_epoch': {key: [] for key in configs["test"]}}
     output_configs = list(set(configs["test"] + configs["train"])) 
+    print("output configs:", output_configs)
     # output_configs = list(set(configs["test"])) 
     for config in output_configs: 
         test_dataset = load_dataset.my_dataset(tf, n_sample, dataset, configs=config, training=False, test_size=test_size) 
         test_dataloaders[config] = DataLoader(test_dataset, batch_size=batch_size, shuffle=False, num_workers=1)
+        print(config, test_dataset.len_data)
+
 
     optim = torch.optim.Adam(ddpm.parameters(), lr=lrate)
 
@@ -618,31 +627,32 @@ def training(args):
         optim.param_groups[0]['lr'] = lrate*(1-ep/n_epoch)
 
         pbar = tqdm(train_dataloader)
+        train_losses = []
         for x, c in pbar:
             optim.zero_grad()
             x = x.to(device)
             _c = [tmpc.to(device) for tmpc in c.values()]
             loss = ddpm(x, _c)
-            log_dict['train_loss_per_batch'].append(loss.item())
             loss.backward()
             loss_ema = loss.item()
             pbar.set_description(f"loss: {loss_ema:.4f}")
+            train_losses.append(loss_ema)
             optim.step()
-        
+        log_dict['train_loss_per_epoch'].append(np.mean(train_losses))
 
         ddpm.eval()
         with torch.no_grad():
-
+            test_losses = []
             for test_config in configs["test"]: 
                 for test_x, test_c in test_dataloaders[test_config]:
                     test_x = test_x.to(device)
                     _test_c = [tmptest_c.to(device) for tmptest_c in test_c.values()]
                     test_loss = ddpm(test_x, _test_c)
-                    log_dict['test_loss_per_batch'][test_config].append(test_loss.item())
-                    
+                    test_losses.append(test_loss.item())
+                log_dict['test_loss_per_epoch'][test_config].append(np.mean(test_losses))
 
             # if (ep + 1) % 100 == 0 or ep >= (n_epoch - 5): 
-            if (ep + 1) % 100 == 0 or ep >= (n_epoch-1): 
+            if ep == 0 or (ep + 1) % 100 == 0 or ep >= (n_epoch-1): 
                 for test_config in output_configs: 
                     x_real, c_gen = next(iter(test_dataloaders[test_config]))
                     x_real = x_real[:n_sample].to(device)
@@ -651,6 +661,19 @@ def training(args):
                     else:
                         x_gen, x_gen_store = ddpm.sample(n_sample, c_gen, (in_channels, pixel_size, pixel_size), device, guide_w=0.0)
                     np.savez_compressed(save_dir + f"image_"+test_config+"_ep"+str(ep)+".npz", x_gen=x_gen.detach().cpu().numpy()) 
+                    print('saved image file at ' + save_dir + f"image_"+test_config+"_ep"+str(ep)+".npz")
+
+                    img_filename = f"image_"+test_config+"_ep"+str(ep)+".png"
+                    img = x_gen[0].detach().cpu().numpy()
+                    img = np.transpose(img, (1, 2, 0))
+                    img = img.clip(0, 1)
+                    
+                    plt.figure()
+                    plt.title(f"ep{ep}: {test_config}")
+                    plt.imshow(img)
+                    plt.axis('off')
+                    plt.savefig(save_dir + img_filename, bbox_inches="tight")
+
                     print('saved image at ' + save_dir + f"image_"+test_config+"_ep"+str(ep)+".png")
 
                     if ep + 1 == n_epoch: 
@@ -659,13 +682,27 @@ def training(args):
 
 
             if (ep + 1) == n_epoch:
-                with open(save_dir + f"training_log_"+str(ep)+".json", "w") as outfile:
+                with open(save_dir + f"loss_log"+str(ep)+".json", "w") as outfile:
                     json.dump(log_dict, outfile)
+                
+                plt.figure()
+                plt.title("Training Loss")
+                plt.plot(log_dict["train_loss_per_epoch"])
+                plt.grid(True)
+                plt.xlabel("epochs")
+                plt.ylabel("MSE loss")
+                plt.savefig(save_dir + "trainingLoss.jpg", bbox_inches="tight")
 
+                for config in configs["test"]:
+                    plt.figure()
+                    plt.title(f"Test Loss: {config}")
+                    plt.plot(log_dict["test_loss_per_epoch"][config])
+                    plt.grid(True)
+                    plt.xlabel("epochs")
+                    plt.ylabel("MSE loss")
+                    plt.savefig(save_dir + f"testLoss_{config}.jpg", bbox_inches="tight")
 
 
 if __name__ == "__main__":
     args = parser.parse_args()
     training(args)
-
-
