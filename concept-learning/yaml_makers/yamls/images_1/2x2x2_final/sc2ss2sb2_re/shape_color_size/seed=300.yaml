@@ -121,13 +121,13 @@ n_samples_test:
 - 2048
 n_samples_test_gen:
 - 0
-- 50000
-- 50000
-- 50000
+- 5
+- 5
+- 5
 - 0
 - 0
 - 0
-- 50000
+- 5
 n_samples_train:
 - 2048
 - 2048
@@ -138,13 +138,13 @@ n_samples_train:
 - 0
 - 0
 n_samples_train_gen:
-- 50000
+- 5
 - 0
 - 0
 - 0
-- 50000
-- 50000
-- 50000
+- 5
+- 5
+- 5
 - 0
 num_steps: 40000
 save_steps: 120

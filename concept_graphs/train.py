@@ -557,7 +557,6 @@ def training(args):
     # in_channels = 3 if "celeba" in dataset else 4
     in_channels = 3
 
-
     torch.manual_seed(seed)
     if torch.cuda.is_available():
         torch.cuda.manual_seed(seed)
@@ -638,7 +637,7 @@ def training(args):
             pbar.set_description(f"loss: {loss_ema:.4f}")
             train_losses.append(loss_ema)
             optim.step()
-        log_dict['train_loss_per_epoch'].append(np.mean(train_losses))
+        log_dict['train_loss_per_epoch'].append(np.sum(train_losses)/train_dataset.len_data)
 
         ddpm.eval()
         with torch.no_grad():
@@ -649,7 +648,7 @@ def training(args):
                     _test_c = [tmptest_c.to(device) for tmptest_c in test_c.values()]
                     test_loss = ddpm(test_x, _test_c)
                     test_losses.append(test_loss.item())
-                log_dict['test_loss_per_epoch'][test_config].append(np.mean(test_losses))
+                log_dict['test_loss_per_epoch'][test_config].append(np.sum(test_losses)/(test_dataset.len_data/4))
 
             # if (ep + 1) % 100 == 0 or ep >= (n_epoch - 5): 
             if ep == 0 or (ep + 1) % 100 == 0 or ep >= (n_epoch-1): 

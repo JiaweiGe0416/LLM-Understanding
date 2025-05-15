@@ -100,8 +100,8 @@ class my_dataset(Dataset):
            else:
                # Define colors mapping
                colors_map = {
-                   '0': [0.9, 0.1, 0.1],
-                   '1': [0.1, 0.1, 0.9],
+                   '0': [0.1, 0.1, 0.9],
+                   '1': [0.9, 0.1, 0.1],
                    '2': [0.1, 0.9, 0.1]
                }
 
