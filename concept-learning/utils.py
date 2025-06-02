@@ -429,10 +429,14 @@ def generate_images_1(i_class,n_sample,config,test=False):
             a1,b1=2,(1-(np.sqrt(3)/6))*triangle_side
             a2,b2=-2,(1-(np.sqrt(3)/6))*triangle_side
             mask=(dy>(-incircle))*(dy<(a1*dx+b1))*(dy<(a2*dx+b2))
+<<<<<<< HEAD
         if "shape" not in config["data_params"] or "shape" not in comp_classes:
             smoothmask=mask
         else:
             smoothmask=sim.gaussian_filter(mask.astype(np.float32),1.)
+=======
+        smoothmask=sim.gaussian_filter(mask.astype(np.float32),1.)
+>>>>>>> 11e46051b721430d2874a284b0137e5dae50c0bb
         image+=smoothmask[:,:,None]*color[None,None,:]+(1-smoothmask[:,:,None])*bg_color[None,None,:]
         noise=np.random.randn(image_size,image_size,3)*noise_level
         image+=noise

@@ -1,10 +1,18 @@
 import numpy as np
+<<<<<<< HEAD
 import os
+=======
+
+>>>>>>> 11e46051b721430d2874a284b0137e5dae50c0bb
 import torch
 import torch.nn as nn
 import torch.optim as optim
 from torch.utils.data import DataLoader, TensorDataset
+<<<<<<< HEAD
 import copy
+=======
+
+>>>>>>> 11e46051b721430d2874a284b0137e5dae50c0bb
 
 import importlib
 from mpl_toolkits.mplot3d import Axes3D
@@ -39,11 +47,16 @@ def sampling(center_list, var_list, n):
 
 
 class MLP(nn.Module):
+<<<<<<< HEAD
     def __init__(self, input_dim, hidden_dims, use_init, var=np.sqrt(6), activation_type='ReLU', folder="", m=0):
+=======
+    def __init__(self, input_dim, hidden_dims, activation_type='ReLU', use_init=None, m=0):
+>>>>>>> 11e46051b721430d2874a284b0137e5dae50c0bb
         """
         Parameters:
         - input_dim: Input feature dimension
         - hidden_dims: List of hidden layer sizes (e.g., [10, 20, 10])
+<<<<<<< HEAD
         - use_init (string):  if None, use default initialization; 
                               if "he", initialize with Kaiming uniform (He initialization);
                               if "pretrained", initialize with pretrained weights;
@@ -53,6 +66,14 @@ class MLP(nn.Module):
         - activation_type: 'ReLU', 'Tanh', or 'linear'
         - folder (string): if initializing with pretrained weights, use weights from folder 
         - m (int): if initializing with pretrained weights, use weights from model m (in range(k))
+=======
+        - activation_type: 'ReLU' or 'linear'
+        - use_bias (boolean): include bias in layers if True
+        - use_init (string):  use default initialization if None; 
+                              initialize with Kaiming uniform (He initialization) if "he"
+                              initialize with flipped weights if "flipped"
+        - m (int): if initializing with flipped weights, use weights from model m (in range(k))
+>>>>>>> 11e46051b721430d2874a284b0137e5dae50c0bb
         """
         super(MLP, self).__init__()
 
@@ -63,6 +84,7 @@ class MLP(nn.Module):
         hidden_dim = 0
         for hidden_dim in hidden_dims:
             linear = nn.Linear(prev_dim, hidden_dim, bias=True)
+<<<<<<< HEAD
 
             if use_init == "pretrained": 
                 # initialize with saved weights
@@ -85,18 +107,34 @@ class MLP(nn.Module):
                 nn.init.uniform_(linear.weight, -var * bound, var * bound)
                 nn.init.uniform_(linear.bias, -var * bound, var * bound)
     
+=======
+            if use_init == "flipped": 
+                # initialize with saved weights
+                pretrained_weights = torch.load("dim=%s_layer=" % hidden_dim + "0_k=%s.pth" % m)
+                with torch.no_grad():
+                    linear.weight.copy_(pretrained_weights['linear.weight'])
+                    linear.bias.copy_(pretrained_weights['linear.bias'])
+            elif use_init == "he": 
+                # initialize weights around 0 with Kaiming uniform
+                nn.init.kaiming_uniform_(linear.weight, nonlinearity='relu')
+                nn.init.uniform_(linear.bias, -(6 / prev_dim) ** 0.5, (6 / prev_dim) ** 0.5)
+>>>>>>> 11e46051b721430d2874a284b0137e5dae50c0bb
             layers.append(linear) 
 
             if activation_type == 'ReLU':
                 layers.append(nn.ReLU())
             elif activation_type == 'linear':
                 layers.append(nn.Identity())  # Linear activation
+<<<<<<< HEAD
             elif activation_type == 'Tanh':
                 layers.append(nn.Tanh())
+=======
+>>>>>>> 11e46051b721430d2874a284b0137e5dae50c0bb
             prev_dim = hidden_dim  # Update input dim for next layer
 
         # Output layer
         linear = nn.Linear(prev_dim, input_dim, bias=True)
+<<<<<<< HEAD
         if use_init == "pretrained": 
             # initialize with saved weights
             pretrained_weights = torch.load("weights/" + folder + "/dim=%s_layer=" % hidden_dim + "1_k=%s.pth" % m)
@@ -117,6 +155,18 @@ class MLP(nn.Module):
             bound = 1 / np.sqrt(fan_in)
             nn.init.uniform_(linear.weight, -var * bound, var * bound)
             nn.init.uniform_(linear.bias, -var * bound, var * bound)
+=======
+        if use_init == "flipped": 
+            # initialize with saved weights
+            pretrained_weights = torch.load("dim=%s_layer=" % hidden_dim + "1_k=%s.pth" % m)
+            with torch.no_grad():
+                linear.weight.copy_(pretrained_weights['linear.weight'])
+                linear.bias.copy_(pretrained_weights['linear.bias'])
+        elif use_init == "he": 
+            # initialize weights around 0 with Kaiming uniform
+            nn.init.kaiming_uniform_(linear.weight, nonlinearity='relu')
+            nn.init.uniform_(linear.bias, -(6 / prev_dim) ** 0.5, (6 / prev_dim) ** 0.5)
+>>>>>>> 11e46051b721430d2874a284b0137e5dae50c0bb
         layers.append(linear)
 
         # Combine all layers
@@ -128,7 +178,11 @@ class MLP(nn.Module):
 
 
     
+<<<<<<< HEAD
 def train_mlp(samples, hidden_dims, targets, test_samples=None, test_targets=None, batch_size=128, opt='SGD', lr=0.001, clip=0.0, use_tol=False, tol=1e-7, max_epochs=10000, use_init=None, var=1.0, folder="", m=0, debug=False):    
+=======
+def train_mlp(samples, hidden_dims, targets, lr=0.001, opt='SGD', use_init=None, m=0, batch_size=128, max_epochs=10000, tol=1e-7, use_tol=False, debug=False):    
+>>>>>>> 11e46051b721430d2874a284b0137e5dae50c0bb
     """
     Train a multi-layer MLP model.
 
@@ -136,6 +190,7 @@ def train_mlp(samples, hidden_dims, targets, test_samples=None, test_targets=Non
     - samples: Training samples (numpy array)
     - hidden_dims: List of hidden layer sizes (e.g., [10, 20, 10])
     - targets: Training targets (numpy array)
+<<<<<<< HEAD
     - test_samples: Test samples (numpy array)
     - test_targets: Test targets (numpy array)
     - batch_size: Training batch size
@@ -160,6 +215,21 @@ def train_mlp(samples, hidden_dims, targets, test_samples=None, test_targets=Non
     - initial weights
     - initial weight norms
     - (optional): test loss history
+=======
+    - lr: Learning rate for optimizer
+    - opt: 'SGD', 'Adam'
+    - use_init (string):  use default initialization if None; 
+                        initialize with Kaiming uniform (He initialization) if "he"
+                        initialize with flipped weights if "flipped"
+    - m (int): if initializing with learned weights, use model m of k
+    - batch_size: Training batch size
+    - max_epochs: Maximum number of epochs
+    - tol: Convergence tolerance
+
+    Returns:
+    - trained model
+    - loss history (num_epochs,)
+>>>>>>> 11e46051b721430d2874a284b0137e5dae50c0bb
     """
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
@@ -173,6 +243,7 @@ def train_mlp(samples, hidden_dims, targets, test_samples=None, test_targets=Non
 
     # Define model
     input_dim = samples.shape[1]
+<<<<<<< HEAD
     model = MLP(input_dim, hidden_dims, use_init=use_init, var=var, folder=folder, m=m).to(device)
 
     # Store initial MLP weights + norms
@@ -187,6 +258,9 @@ def train_mlp(samples, hidden_dims, targets, test_samples=None, test_targets=Non
             init_norms.append(np.linalg.norm(w_init[name], axis=(0,1)))
         elif "bias" in name:
             init_norms.append(np.linalg.norm(w_init[name]))
+=======
+    model = MLP(input_dim, hidden_dims, use_init=use_init, m=m).to(device)
+>>>>>>> 11e46051b721430d2874a284b0137e5dae50c0bb
 
     # Define optimizer
     if opt == 'SGD':
@@ -198,16 +272,23 @@ def train_mlp(samples, hidden_dims, targets, test_samples=None, test_targets=Non
     # Training loop
     loss_history = []
     prev_loss = float('inf')
+<<<<<<< HEAD
     loss_fn = nn.MSELoss()
     testLoss_history = []
     
     for epoch in range(max_epochs):
         epoch_loss = []
+=======
+    
+    for epoch in range(max_epochs):
+        epoch_loss = 0
+>>>>>>> 11e46051b721430d2874a284b0137e5dae50c0bb
         for batch in dataloader:
             x_batch, y_batch = batch
             optimizer.zero_grad()
             output = model(x_batch)
 
+<<<<<<< HEAD
             loss = loss_fn(output, y_batch)
             if (epoch == max_epochs - 1): 
                 print("batch loss =", loss.item())
@@ -229,6 +310,20 @@ def train_mlp(samples, hidden_dims, targets, test_samples=None, test_targets=Non
             testLoss_history.append(testLoss)
 
         if epoch == max_epochs - 1: 
+=======
+            loss = nn.functional.mse_loss(output, y_batch)
+            if (epoch == max_epochs - 1): 
+                print("batch loss =", loss)
+                print("random sample loss =", nn.functional.mse_loss(output[0], y_batch[0]))
+
+            loss.backward()
+            #torch.nn.utils.clip_grad_norm_(model.parameters(), max_norm=10.0)
+            optimizer.step()
+            epoch_loss += torch.sum(torch.square((output - y_batch)))/len(samples)
+
+        loss_history.append(epoch_loss)
+        if (epoch == max_epochs - 1): 
+>>>>>>> 11e46051b721430d2874a284b0137e5dae50c0bb
             print("final epoch loss=", epoch_loss)
             
         # Check for convergence
@@ -242,9 +337,13 @@ def train_mlp(samples, hidden_dims, targets, test_samples=None, test_targets=Non
         if epoch % 1000 == 0:
             if debug: print(f"Epoch {epoch}: Loss = {epoch_loss:.4f}")
 
+<<<<<<< HEAD
     if testLoss_history:
         return model, loss_history, init_weights, init_norms, testLoss_history
     else: return model, loss_history, init_weights, init_norms
+=======
+    return model, loss_history
+>>>>>>> 11e46051b721430d2874a284b0137e5dae50c0bb
 
 
 
@@ -275,13 +374,24 @@ def test_model(model, test_points):
     with torch.no_grad():  # No need for gradients during inference
         predictions = model(test_tensor).cpu().numpy()  # Convert output to NumPy
     
+<<<<<<< HEAD
+=======
+    # Print results
+    # for i, (inp, pred) in enumerate(zip(test_points, predictions)):
+    #     print(f"For test point {inp}, the model predicts {pred}")
+    
+>>>>>>> 11e46051b721430d2874a284b0137e5dae50c0bb
     return predictions  # Return predictions for further analysis if needed
 
 
 
 
 
+<<<<<<< HEAD
 def collect_clusterPredictions(hidden_dim, center_list, var_list, test_centers=None, test_vars=None, target_fn=None, alpha=0, n_test=20, k=10, lo=100, hi=110, step=10, opt='SGD', lr=0.001, clip=0.0, max_epochs=10000, use_tol=False, use_init=None, var=np.sqrt(6), folder="", debug=True):
+=======
+def collect_clusterPredictions(hidden_dim, center_list, var_list, test_centers, test_vars, target_fn=None, n_test=20, k=10, lo=100, hi=110, step=10, lr=0.001, opt='SGD', use_tol=False, use_init=None, m=0, debug=True):
+>>>>>>> 11e46051b721430d2874a284b0137e5dae50c0bb
     """
     Collect predictions of model on test set over values of n (number of training samples) between lo and hi. 
     Also collect (averaged over k) training loss history models trained on each of range(lo,hi,step) samples.
@@ -293,12 +403,16 @@ def collect_clusterPredictions(hidden_dim, center_list, var_list, test_centers=N
     - test_centers: List of d-dimensional centers of Gaussian test clusters
     - test_vars (list of dxd covariance matrices): List of dxd matrices representing the covariance for Gaussian test clusters.
     - target_fn: Function mapping sample points to target points (defaults to identity map)
+<<<<<<< HEAD
     - alpha (float): alpha for interpolating flipped & identity maps
+=======
+>>>>>>> 11e46051b721430d2874a284b0137e5dae50c0bb
     - n_test (int): number of test points sampled from each test cluster
     - k (int): number of predictions/models trained for each choice of n
     - lo (int): min n
     - hi (int): max n
     - step (int): intervals of n to collection predictions for
+<<<<<<< HEAD
     - opt: {'SGD', 'Adam'}
     - lr (int): learning rate for optimizer
     - clip (float): clip with maxNorm=clip
@@ -319,11 +433,25 @@ def collect_clusterPredictions(hidden_dim, center_list, var_list, test_centers=N
     - init_weights: List of initial model weights
     - init_norms: List of iniital model norms
     - r: List of random points used for far corners
+=======
+    - lr (int): learning rate for optimizer
+    - opt: {'SGD', 'Adam'}
+    - use_tol (boolean): terminate when converged or after fixed number of epochs
+    - use_init (string): {'he', 'flipped'}
+
+    Returns:
+    - evals (n_sizes x k x n_testPoints x dim): Array of all model predictions (over lo <= n < hi) for each test point
+    - losses: List (ragged in dim 2) of all training loss histories for each n in (lo,hi,step)
+    - test_points: List of sampled test points (  from each cluster)
+    - weights: List of learned model weights (n_sizes x 1 x k x n_layers x {size of layer})
+    - norms: List of norms of learned model weights (n_sizes x k x n_layers)
+>>>>>>> 11e46051b721430d2874a284b0137e5dae50c0bb
     """
     evals = []
     losses = []
     weights = []
     norms = []
+<<<<<<< HEAD
     init_weights = []
     init_norms = []
     testLosses = []
@@ -337,17 +465,29 @@ def collect_clusterPredictions(hidden_dim, center_list, var_list, test_centers=N
         test_samples = sampling(test_centers, test_vars, n_test)
 
     for i in range(lo, hi, step):
+=======
+    np.set_printoptions(threshold=np.inf)
+
+    # sample test points
+    test_samples = sampling(test_centers, test_vars, n_test)
+
+    for i in range(lo,hi,step):
+>>>>>>> 11e46051b721430d2874a284b0137e5dae50c0bb
         curr_losses = []    
         curr_tests = []
         curr_weights = []
         curr_norms = []
+<<<<<<< HEAD
         curr_init_w = []
         curr_init_n = []
         curr_testLosses = []
+=======
+>>>>>>> 11e46051b721430d2874a284b0137e5dae50c0bb
         for j in range(k):
             if debug: print("on iteration", j, " of k=", k)
             train_samples = sampling(center_list, var_list, i)    # n_testPoints x 3
             # Train the MLP
+<<<<<<< HEAD
             if target_fn == "flippedIdentity":
                 train_targets = target_fn(train_samples)
             elif target_fn == "randomMap":
@@ -373,6 +513,16 @@ def collect_clusterPredictions(hidden_dim, center_list, var_list, test_centers=N
             curr_init_w.append(init_w)
             curr_init_n.append(init_n)
             
+=======
+            if target_fn is None:
+                train_targets = train_samples # identity map by default
+            else:
+                train_targets = target_fn(train_samples)
+            trained_model, loss_history= train_mlp(train_samples, hidden_dim, train_targets, lr=lr, opt=opt, use_init=use_init, m=m, use_tol=use_tol, debug=debug)
+            predictions = test_model(trained_model, test_samples) # n_testPoints x 3
+            curr_tests.append(predictions)
+            curr_losses.append(loss_history)
+>>>>>>> 11e46051b721430d2874a284b0137e5dae50c0bb
 
             # Store MLP weights + norms
             w = {}
@@ -391,6 +541,7 @@ def collect_clusterPredictions(hidden_dim, center_list, var_list, test_centers=N
         evals.append(curr_tests)    # curr_tests is k x n_testPoints x 3
         weights.append(curr_weights) # curr_weights is k x 2 x {weight_shape}
         norms.append(curr_norms)    # curr_norms is k x 2
+<<<<<<< HEAD
         init_weights.append(curr_init_w)
         init_norms.append(curr_init_n)
     
@@ -399,6 +550,10 @@ def collect_clusterPredictions(hidden_dim, center_list, var_list, test_centers=N
         return np.array(evals), test_samples, losses, testLosses, weights, norms, init_weights, init_norms, r
     else:
         return losses, weights, norms, r
+=======
+        
+    return np.array(evals), test_samples, losses, weights, norms
+>>>>>>> 11e46051b721430d2874a284b0137e5dae50c0bb
 
 
 
@@ -412,7 +567,10 @@ def compute_clusterLoss(evals, test_targets, test_centers, n_test=20, m=-1):
     - test_targets (List): List of all test targets
     - test_centers (List): List of centers of all test clusters
     - n_test (int): number of test points sampled from each test cluster
+<<<<<<< HEAD
     - m (int): use model m of k
+=======
+>>>>>>> 11e46051b721430d2874a284b0137e5dae50c0bb
 
     Output: 
     - loss_list (np.array): Array (len(test_centers) x n_sizes) of average test loss in each cluster
@@ -424,9 +582,15 @@ def compute_clusterLoss(evals, test_targets, test_centers, n_test=20, m=-1):
     for test_idx in range(n_testPoints):
         cluster_idx = test_idx // n_test    # idx of curr test cluster
         test_target = test_targets[test_idx]
+<<<<<<< HEAD
         test_eval = np.array(evals)[:,:,test_idx] # n_sizes x k x 3
         loss = np.sum(np.square(test_eval - np.full(test_eval.shape, test_target)), axis=2) # n_sizes x k
 
+=======
+        test_eval = evals[:,:,test_idx] # n_sizes x k x 3
+        loss = np.sum(np.square(test_eval - np.full(test_eval.shape, test_target)), axis=2) # n_sizes x k
+        #loss = nn.functional.mse_loss(torch.tensor(test_eval), torch.tensor(test_target))
+>>>>>>> 11e46051b721430d2874a284b0137e5dae50c0bb
         if loss.any() > 1:
             print(loss)
             print(test_eval)
@@ -435,12 +599,20 @@ def compute_clusterLoss(evals, test_targets, test_centers, n_test=20, m=-1):
             loss_list[cluster_idx].append(loss[:, m])
         else:
             loss_list[cluster_idx].append(np.mean(loss, axis=1)) #  loss_list after for loop: len(test_centers) x n_test x n_sizes
+<<<<<<< HEAD
 
+=======
+        #loss_list[cluster_idx].append(loss)
+>>>>>>> 11e46051b721430d2874a284b0137e5dae50c0bb
     loss_list = np.mean(loss_list, axis=1)  # len(test_centers) x n_sizes
     return loss_list
 
 
+<<<<<<< HEAD
 def plot_clusterTestLoss(loss_list, test_centers, hidden_dim, lo=100, hi=110, step=10, labels=10, folder=None):
+=======
+def plot_clusterTestLoss(loss_list, test_centers, hidden_dim, lo=100, hi=110, step=10, labels=10):
+>>>>>>> 11e46051b721430d2874a284b0137e5dae50c0bb
     """
     Plot test loss averaged over points sampled from each test cluster over num training samples.
 
@@ -448,11 +620,18 @@ def plot_clusterTestLoss(loss_list, test_centers, hidden_dim, lo=100, hi=110, st
     - loss_list (np.array): Array (len(test_centers) x n_sizes) of average test loss in each cluster
     - test_centers (List): List of centers of all test clusters
     - hidden_dim: List containing number of hidden neurons per layer
+<<<<<<< HEAD
+=======
+    - activation_type: {'linear', 'ReLU}
+>>>>>>> 11e46051b721430d2874a284b0137e5dae50c0bb
     - lo (int): min n
     - hi (int): max n
     - step (int): intervals of n
     - labels (int): Interval of labels for x axis
+<<<<<<< HEAD
     - folder (str): folder name to save figure in
+=======
+>>>>>>> 11e46051b721430d2874a284b0137e5dae50c0bb
     """
     n_testCenters = len(test_centers)
     for cluster_idx in range(n_testCenters):
@@ -465,6 +644,7 @@ def plot_clusterTestLoss(loss_list, test_centers, hidden_dim, lo=100, hi=110, st
     plt.xlim(0,(hi-lo)/step)
     plt.xticks(np.arange(0, hi-lo,step)/step, lo + np.arange(0, hi-lo, labels))
     plt.grid(True)
+<<<<<<< HEAD
 
     if folder:
         os.makedirs("outputs/" + folder + "/" + str(hidden_dim), exist_ok=True)
@@ -473,6 +653,12 @@ def plot_clusterTestLoss(loss_list, test_centers, hidden_dim, lo=100, hi=110, st
     
     
 def scatter_testPredictions(evals, test_targets, hidden_dim, test_ids, n_test=20, k=10, title=None, folder=None, file=""):
+=======
+    plt.show()
+    
+    
+def scatter_testPredictions(evals, test_targets, hidden_dim, test_ids, n_test=20, k=10, title=None):
+>>>>>>> 11e46051b721430d2874a284b0137e5dae50c0bb
     """
     Scatter plot of test predictions for varying num training samples.
 
@@ -482,10 +668,15 @@ def scatter_testPredictions(evals, test_targets, hidden_dim, test_ids, n_test=20
     - hidden_dim: List containing number of hidden neurons per layer
     - test_ids: List of test indices to plot
     - n_test (int): number of test points sampled from each test cluster
+<<<<<<< HEAD
     - k (int): number of predictions/models trained for each choice of n
     - title (str): plot title
     - folder (str): folder name to save figure in
     - file (str): file name
+=======
+    - activation_type: {'linear', 'ReLU}
+    - k (int): number of predictions/models trained for each choice of n
+>>>>>>> 11e46051b721430d2874a284b0137e5dae50c0bb
     """
     fig = plt.figure(figsize=(10, 10))
     ax = fig.add_subplot(111, projection='3d')
@@ -495,9 +686,18 @@ def scatter_testPredictions(evals, test_targets, hidden_dim, test_ids, n_test=20
 
     # plot each corner
     test_idList = np.ravel([id * n_test + np.arange(n_test) for id in test_ids])
+<<<<<<< HEAD
     for test_idx in test_idList:
         # read out predictions for each test point
         test_evals = evals[:, :, test_idx] # n_sizes x k x dim
+=======
+    #print(test_idList)
+    #print(evals.shape)
+    for test_idx in test_idList:
+        # read out predictions for each test point
+        test_evals = evals[:, :, test_idx] # n_sizes x k x dim
+        #print(test_evals.shape)
+>>>>>>> 11e46051b721430d2874a284b0137e5dae50c0bb
         ax.scatter(test_evals[:, :, 0], test_evals[:, :, 1], test_evals[:, :, 2], c=np.arange(0, len(test_evals)*k, 1), cmap=cmap, norm=norm, s=10, zorder=1)
         # plot test point itself
         ax.scatter(test_targets[test_idx, 0], test_targets[test_idx, 1], test_targets[test_idx, 2], c='r', s=20, zorder=2)
@@ -522,6 +722,7 @@ def scatter_testPredictions(evals, test_targets, hidden_dim, test_ids, n_test=20
         plt.title(title)
     else:
         plt.title('Test predictions (hidden_dim = %s, ' % hidden_dim + 'ReLU)')
+<<<<<<< HEAD
 
     if folder:
         os.makedirs("outputs/" + folder + "/" + str(hidden_dim), exist_ok=True)
@@ -530,6 +731,12 @@ def scatter_testPredictions(evals, test_targets, hidden_dim, test_ids, n_test=20
     
     
 def plot_trainingLoss(losses, loss_n, plot_list, hidden_dim, trials=[], k=10, epochs=10000, folder=None, file=""):
+=======
+    plt.show()
+    
+    
+def plot_trainingLoss(losses, loss_n, plot_list, hidden_dim, trials=[], k=10, epochs=10000):
+>>>>>>> 11e46051b721430d2874a284b0137e5dae50c0bb
     """
     Plot a random training loss history from one of k models trained on n train samples for each n in plot_list.
 
@@ -538,10 +745,16 @@ def plot_trainingLoss(losses, loss_n, plot_list, hidden_dim, trials=[], k=10, ep
     - loss_n (List): Sorted list of n's for which we collect loss histories
     - plot_list (List): subset of indices in loss_n for which to actually plot loss histories
     - hidden_dim: List containing number of hidden neurons per layer
+<<<<<<< HEAD
     - k (int): number of predictions/models trained for each choice of n
     - epochs (int): number of epochs
     - folder (str): folder name to save figure in
     - file (str): file name to save figure under
+=======
+    - activation_type: {'linear', 'ReLU}
+    - k (int): number of predictions/models trained for each choice of n
+    - epochs (int): number of epochs
+>>>>>>> 11e46051b721430d2874a284b0137e5dae50c0bb
     """
     for loss_idx in plot_list:
         for trial in trials:
@@ -553,6 +766,7 @@ def plot_trainingLoss(losses, loss_n, plot_list, hidden_dim, trials=[], k=10, ep
         plt.ylabel('Training Loss')
         plt.xlim(0, epochs)
         plt.title('Training loss (hidden_dim = %s, ' % hidden_dim + 'ReLU, n=' + str(loss_n[loss_idx]) + ')')
+<<<<<<< HEAD
         if trials:
             plt.legend(['model % d' % j for j in range(k)])
         plt.grid(True)
@@ -560,6 +774,13 @@ def plot_trainingLoss(losses, loss_n, plot_list, hidden_dim, trials=[], k=10, ep
         if folder:
             os.makedirs("outputs/" + folder + "/", exist_ok=True)
             plt.savefig("outputs/" + folder + "/" + file +".jpg", bbox_inches="tight")
+=======
+        if not trials:
+            plt.legend(['avg over k models'])
+        else:
+            plt.legend(['model % d' % j for j in range(k)])
+        plt.grid(True)
+>>>>>>> 11e46051b721430d2874a284b0137e5dae50c0bb
         plt.show()
     
     
@@ -577,7 +798,11 @@ def plot_hiddDim(testLoss_list, test_centers, hidd_list, lo=100):
     plt.show()
     
     
+<<<<<<< HEAD
 # define mapping from samples to targets in flipped map
+=======
+# define mapping from samples to targets
+>>>>>>> 11e46051b721430d2874a284b0137e5dae50c0bb
 def flippedIdentity(samples):
     out = []
     for sample in samples:
@@ -585,6 +810,7 @@ def flippedIdentity(samples):
         else: out.append(1-np.array(sample))
     return np.array(out)
 
+<<<<<<< HEAD
 # randomly sample targets of far corners from zero-centered gaussian
 def randomMap(samples, dist=None, sigma=50, bound=2.0):
     samples = np.array(samples)
@@ -639,12 +865,17 @@ def interpolateFlipped(samples, alpha=0):
 
 
 def plot_norms(norms, hidden_dim, size=0, param="", folder=None, file=""):
+=======
+
+def plot_norms(norms, hidden_dim, size=0):
+>>>>>>> 11e46051b721430d2874a284b0137e5dae50c0bb
     """
     Plot a norm of weights learned by layer for each of k models.
 
     Inputs:
     - norms (List): List (n_sizes x k x n_layers) of learned weights
     - hidden_dim: List containing number of hidden neurons per layer
+<<<<<<< HEAD
     - param (str): if "weights", plot norms of weights only
                    if "bias", plot norms of biases only
                    else, plot both
@@ -667,12 +898,22 @@ def plot_norms(norms, hidden_dim, size=0, param="", folder=None, file=""):
         for i in range(k):
             plt.plot(norms[size][i])
         plt.xticks(range(2*n_layers), ['W1', 'b1', 'W2', 'b2'])
+=======
+    - activation_type: {'linear', 'ReLU}
+    """
+    k = len(norms[0])
+    n_layers = len(norms[0][0])
+    for i in range(k):
+        plt.plot(norms[size][i])
+
+>>>>>>> 11e46051b721430d2874a284b0137e5dae50c0bb
     plt.ylabel('norm')
     plt.title('Layer norms (hidden_dim = %s, ' % hidden_dim + 'ReLU)')
     if k == 1:
         plt.legend(['avg over k models'])
     else:
         plt.legend(['model % d' % j for j in range(k)])
+<<<<<<< HEAD
     plt.grid(True)
 
     if folder:
@@ -699,3 +940,8 @@ def plot_weightsSVD(n_hiddDim, hidd_list, k, folder=""):
         ax[0].grid(True)
         ax[1].grid(True)
         plt.legend(['model % d' % j for j in range(k)], loc="upper left", bbox_to_anchor=(1.1, 0.8))
+=======
+    plt.xticks(range(n_layers), ['W1', 'b1', 'W2', 'b2'])
+    plt.grid(True)
+    plt.show()
+>>>>>>> 11e46051b721430d2874a284b0137e5dae50c0bb
