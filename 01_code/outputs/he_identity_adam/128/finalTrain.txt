@@ -1,0 +1,10 @@
+Final training loss for trial 0: 9.152066993145525e-09
+Final training loss for trial 1: 1.0404807126995763e-08
+Final training loss for trial 2: 4.52373805082118e-08
+Final training loss for trial 3: 2.4991906322213708e-08
+Final training loss for trial 4: 1.9751156488112542e-08
+Final training loss for trial 5: 7.789550893200214e-09
+Final training loss for trial 6: 2.535262666469862e-08
+Final training loss for trial 7: 3.695857841989891e-08
+Final training loss for trial 8: 4.277939558150479e-09
+Final training loss for trial 9: 2.177395641567159e-08
