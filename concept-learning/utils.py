@@ -128,11 +128,11 @@ def multi_one_hot(l,perdim):
         y.append(one_hot(l[i],perdim[i]))
     return np.concatenate(y,axis=0).astype(np.float32)
 
-def generate_data(config,forgen=False,**kwargs):
+def generate_data(config,forgen=False,noise_dist="gaussian",seed=None):
     if "dataset" not in config or config["dataset"]=="vec":
-        return generate_data_vec(config,forgen=forgen,**kwargs)
+        return generate_data_vec(config,forgen=forgen,seed=seed)
     elif config["dataset"]=="images_1":
-        return generate_data_images_1(config,forgen=forgen,**kwargs)
+        return generate_data_images_1(config,noise_dist,forgen=forgen,seed=seed)
     else:
         raise NotImplementedError(f"Dataset {config['dataset']} not implemented")
 
@@ -324,7 +324,7 @@ def generate_images_vecss(**kwargs):
     vecss=np.stack(vecss,axis=0)
     return images,vecss
 
-def generate_images_1(i_class,n_sample,config,test=False):
+def generate_images_1(i_class,n_sample,config,noise_dist,test=False):
     comp_classes=get_comp_classes_images_1(i_class,config)
     ###
     image_size=config["data_params"]["image_size"]
@@ -434,7 +434,10 @@ def generate_images_1(i_class,n_sample,config,test=False):
         else:
             smoothmask=sim.gaussian_filter(mask.astype(np.float32),1.)
         image+=smoothmask[:,:,None]*color[None,None,:]+(1-smoothmask[:,:,None])*bg_color[None,None,:]
-        noise=np.random.randn(image_size,image_size,3)*noise_level
+        if noise_dist=="cauchy":
+            noise=np.random.standard_cauchy((image_size,image_size,3))*noise_level
+        else:
+            noise=np.random.randn(image_size,image_size,3)*noise_level
         image+=noise
         image=np.clip(image,0,1).astype(np.float32)
 
@@ -470,7 +473,7 @@ def generate_images_1(i_class,n_sample,config,test=False):
     vecss=np.stack(vecss,axis=0)
     return images,vecss,np.full(n_sample,i_class)
 
-def generate_data_images_1(config,forgen=False,seed=None):
+def generate_data_images_1(config,noise_dist,forgen=False,seed=None):
     n_classes=config["data_params"]["n_classes"]
     if forgen:
         n_samples_train=config["n_samples_train_gen"]
@@ -489,13 +492,13 @@ def generate_data_images_1(config,forgen=False,seed=None):
             np.random.seed(seed)
         n_sample=n_samples_train[i_class]
         if n_sample!=0:
-            x,y,l=generate_images_1(i_class,n_sample,config,test=False)
+            x,y,l=generate_images_1(i_class,n_sample,config,noise_dist,test=False)
             x_trs.append(x)
             y_trs.append(y)
             l_trs.append(l)
         n_sample=n_samples_test[i_class]
         if n_sample!=0:
-            x,y,l=generate_images_1(i_class,n_sample,config,test=True)
+            x,y,l=generate_images_1(i_class,n_sample,config,noise_dist,test=True)
             x_tes.append(x)
             y_tes.append(y)
             l_tes.append(l)
